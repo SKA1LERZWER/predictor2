@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ru" id="htmlLang">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade Signal App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #050505;
+            --bg-card: #0a0b10;
+            --primary-blue: #2563eb;
+            --primary-gradient: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+            --secondary-bg: #11131f;
+            --text-white: #ffffff;
+            --text-gray: #9ca3af;
+            --border-color: #2e3546;
+            
+            --signal-green: #10b981;
+            --signal-red: #ef4444;
+            --signal-yellow: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-white);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            height: 50px;
+        }
+
+        .select-wrapper {
+            flex-grow: 1;
+            position: relative;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            appearance: none;
+            outline: none;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        select option {
+            background-color: var(--secondary-bg);
+            color: white;
+            padding: 10px;
+        }
+
+        .arrow-icon {
+            position: absolute;
+            right: 15px;
+            pointer-events: none;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .icon-btn {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-blue);
+            border: none;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+            position: relative;
+        }
+
+        .icon-btn.active {
+            background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-box {
+            background: var(--secondary-bg);
+            border-radius: 16px;
+            padding: 30px 20px;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .info-text-default {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .result-content {
+            display: none;
+            width: 100%;
+        }
+        
+        .price-tag {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .signal-direction {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 8px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .main-btn {
+            width: 100%;
+            padding: 20px;
+            border-radius: 16px;
+            border: none;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+            transition: transform 0.1s;
+        }
+
+        .main-btn:active {
+            transform: scale(0.98);
+        }
+
+        .main-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+
+        .signal-up { color: var(--signal-green); }
+        .bg-up { background: rgba(16, 185, 129, 0.15); }
+        .signal-down { color: var(--signal-red); }
+        .bg-down { background: rgba(239, 68, 68, 0.15); }
+
+        .glow-up {
+            border-color: var(--signal-green);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .glow-down {
+            border-color: var(--signal-red);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .signal-info-container {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .timer-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .timer-label {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer-values {
+            font-size: 2.2rem;
+            font-weight: 800;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            margin: 10px 0;
+        }
+
+        .time-remaining {
+            color: var(--text-white);
+            letter-spacing: 2px;
+        }
+
+        .timer-bar {
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .timer-progress {
+            height: 100%;
+            border-radius: 3px;
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        .direction-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .direction-label {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .direction-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .direction-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .direction-until {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            text-align: right;
+        }
+
+        .until-time {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-white);
+            margin-top: 2px;
+            letter-spacing: 1px;
+        }
+
+        .expiry-time {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            margin-top: 5px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 25px;
+            width: 90%;
+            max-width: 320px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .option-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-item {
+            padding: 15px 20px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .option-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary-blue);
+        }
+
+        .option-item.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .option-check {
+            color: var(--primary-blue);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .time-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--signal-green);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .lang-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--signal-red);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .expiry-indicator {
+            background: var(--signal-yellow);
+            color: black;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 12px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .timer-colon {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1 id="appTitle">TRADE SIGNAL</h1>
+
+        <div class="controls-row">
+            <div class="select-wrapper">
+                <select id="currencySelect">
+                    <!-- Валютные пары будут заполнены через JS -->
+                </select>
+                <div class="arrow-icon">▼</div>
+            </div>
+            
+            <button class="icon-btn" id="timeBtn" title="Timeframe">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="time-badge" id="timeBadge">3m</div>
+            </button>
+
+            <button class="icon-btn" id="langBtn" title="Language">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                <div class="lang-badge" id="langBadge">RU</div>
+            </button>
+        </div>
+
+        <div class="infoBox" id="infoBox">
+            <div class="info-text-default" id="defaultText">
+                Нажмите кнопку 'Получить новый сигнал', чтобы начать
+            </div>
+
+            <div class="result-content" id="resultContent">
+                <div style="font-size: 0.9rem; color: #888; margin-bottom: 5px;" id="priceLabel">PRICE</div>
+                <div class="price-tag" id="priceValue">0.0000</div>
+                <div class="signal-direction" id="signalValue">WAITING</div>
+                <div style="margin-top: 15px; font-size: 0.8rem; opacity: 0.7;" id="rsiLabel">RSI: <span id="rsiValue">0</span></div>
+                
+                <!-- Новый блок с таймером и информацией о сигнале -->
+                <div class="signal-info-container" id="signalInfoContainer" style="display: none;">
+                    <div class="timer-section">
+                        <div class="timer-label" id="timerLabel">
+                            <span>Время до конца</span>
+                            <span id="expiryIndicator" class="expiry-indicator" style="display: none;">Скоро истекает</span>
+                        </div>
+                        <div class="timer-values">
+                            <span class="time-remaining" id="timeRemaining">--:--</span>
+                        </div>
+                        <div class="expiry-time">
+                            <span>Истекает в</span>
+                            <span class="until-time" id="expiryTime">--:--</span>
+                        </div>
+                        <div class="timer-bar">
+                            <div class="timer-progress" id="timerProgress"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="direction-section">
+                        <div class="direction-label" id="directionLabel">Направление</div>
+                        <div class="direction-details">
+                            <div class="direction-text" id="directionText">Вниз</div>
+                            <div class="direction-until">
+                                <div id="untilLabel">Действует</div>
+                                <div class="until-time" id="untilTime">до --:--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="main-btn" onclick="fetchSignal()" id="actionBtn">
+            ПОЛУЧИТЬ НОВЫЙ СИГНАЛ
+        </button>
+    </div>
+
+    <!-- Модальное окно выбора таймфрейма -->
+    <div class="modal-overlay" id="timeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="timeModalTitle">Выберите таймфрейм</div>
+                <button class="close-modal" onclick="closeModal('timeModal')">×</button>
+            </div>
+            <div class="option-list" id="timeOptionsList">
+                <div class="option-item selected" data-value="3" onclick="selectTimeframe(3)">
+                    <span>3 минуты</span>
+                    <span class="option-check">✓</span>
+                </div>
+                <div class="option-item" data-value="5" onclick="selectTimeframe(5)">
+                    <span>5 минут</span>
+                    <span class="option-check" style="display: none;">✓</span>
+                </div>
+                <div class="option-item" data-value="7" onclick="selectTimeframe(7)">
+                    <span>7 минут</span>
+                    <span class="option-check" style="display: none;">✓</span>
+                </div>
+                <div class="option-item" data-value="10" onclick="selectTimeframe(10)">
+                    <span>10 минут</span>
+                    <span class="option-check" style="display: none;">✓</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно выбора языка -->
+    <div class="modal-overlay" id="langModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="langModalTitle">Выберите язык</div>
+                <button class="close-modal" onclick="closeModal('langModal')">×</button>
+            </div>
+            <div class="option-list" id="langOptionsList">
+                <div class="option-item selected" data-value="ru" onclick="selectLanguage('ru')">
+                    <span>Русский</span>
+                    <span class="option-check">✓</span>
+                </div>
+                <div class="option-item" data-value="en" onclick="selectLanguage('en')">
+                    <span>English</span>
+                    <span class="option-check" style="display: none;">✓</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Локализация
+    const translations = {
+        ru: {
+            appTitle: "TRADE SIGNAL",
+            defaultText: "Нажмите кнопку 'Получить новый сигнал', чтобы начать",
+            buttonText: "ПОЛУЧИТЬ НОВЫЙ СИГНАЛ",
+            analyzing: "АНАЛИЗ РЫНКА...",
+            priceLabel: "ЦЕНА",
+            rsiLabel: "RSI:",
+            buySignal: "BUY UP ⬆",
+            sellSignal: "SELL DOWN ⬇",
+            errorText: "Ошибка соединения. Попробуйте другую пару.",
+            timeModalTitle: "Выберите таймфрейм",
+            langModalTitle: "Выберите язык",
+            timeframeOptions: ["3 минуты", "5 минут", "7 минут", "10 минут"],
+            languageOptions: ["Русский", "English"],
+            timerLabel: "Время до конца",
+            directionLabel: "Направление",
+            untilLabel: "Действует",
+            expiryWarning: "Скоро истекает",
+            expiryText: "Истек",
+            expiresAt: "Истекает в",
+            untilText: "до",
+            directionUp: "Вверх",
+            directionDown: "Вниз"
+        },
+        en: {
+            appTitle: "TRADE SIGNAL",
+            defaultText: "Click 'Get New Signal' button to start",
+            buttonText: "GET NEW SIGNAL",
+            analyzing: "ANALYZING MARKET...",
+            priceLabel: "PRICE",
+            rsiLabel: "RSI:",
+            buySignal: "BUY UP ⬆",
+            sellSignal: "SELL DOWN ⬇",
+            errorText: "Connection error. Try another pair.",
+            timeModalTitle: "Select Timeframe",
+            langModalTitle: "Select Language",
+            timeframeOptions: ["3 minutes", "5 minutes", "7 minutes", "10 minutes"],
+            languageOptions: ["Russian", "English"],
+            timerLabel: "Time remaining",
+            directionLabel: "Direction",
+            untilLabel: "Valid",
+            expiryWarning: "Expiring soon",
+            expiryText: "Expired",
+            expiresAt: "Expires at",
+            untilText: "until",
+            directionUp: "Up",
+            directionDown: "Down"
+        }
+    };
+
+    // Настройки приложения
+    let currentLanguage = 'ru';
+    let currentTimeframe = 3;
+    let currentSignal = null;
+    let countdownTimer = null;
+    let signalEndTime = null;
+    let signalStartTime = null;
+    let minutesToAdd = 0;
+    let lastSignalMinute = null; // Последняя минута, когда был получен сигнал
+
+    // Список валют
+    const rawPairs = [
+        "CADJPY", "CADCHF", "EURUSD", "AUDUSD", "USDJPY", "AUDJPY", 
+        "GBPAUD", "GBPCAD", "AUDCHF", "EURCAD", "EURJPY", "GBPUSD", 
+        "USDCHF", "EURGBP", "USDCAD", "EURCHF", "GBPCHF", "AUDCAD", "GBPJPY"
+    ];
+
+    // Инициализация приложения
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeApp();
+        setupEventListeners();
+        selectTimeframe(3, true);
+    });
+
+    function initializeApp() {
+        // Заполнение валютных пар
+        const sortedPairs = rawPairs.sort();
+        const select = document.getElementById('currencySelect');
+        
+        sortedPairs.forEach(pair => {
+            const option = document.createElement('option');
+            option.value = pair;
+            const niceName = pair.substring(0, 3) + '/' + pair.substring(3);
+            option.text = niceName;
+            select.appendChild(option);
+        });
+
+        if (sortedPairs.includes('EURUSD')) select.value = 'EURUSD';
+        
+        updateBadges();
+        updateLocalizedTexts();
+    }
+
+    function setupEventListeners() {
+        document.getElementById('timeBtn').addEventListener('click', function() {
+            openModal('timeModal');
+        });
+
+        document.getElementById('langBtn').addEventListener('click', function() {
+            openModal('langModal');
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal(this.id);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal('timeModal');
+                closeModal('langModal');
+            }
+        });
+    }
+
+    // Функции для работы с модальными окнами
+    function openModal(modalId) {
+        if (modalId === 'timeModal') {
+            updateModalSelection('timeOptionsList', currentTimeframe.toString());
+        } else if (modalId === 'langModal') {
+            updateModalSelection('langOptionsList', currentLanguage);
+        }
+        
+        document.getElementById(modalId).classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    function updateModalSelection(listId, selectedValue) {
+        const list = document.getElementById(listId);
+        const items = list.querySelectorAll('.option-item');
+        
+        items.forEach(item => {
+            const check = item.querySelector('.option-check');
+            if (item.dataset.value === selectedValue) {
+                item.classList.add('selected');
+                if (check) check.style.display = 'inline';
+            } else {
+                item.classList.remove('selected');
+                if (check) check.style.display = 'none';
+            }
+        });
+    }
+
+    function selectTimeframe(minutes, init = false) {
+        currentTimeframe = minutes;
+        minutesToAdd = 0;
+        
+        updateModalSelection('timeOptionsList', minutes.toString());
+        updateBadges();
+        
+        if (currentSignal && !init) {
+            updateSignalWithNewTimeframe();
+        }
+        
+        if (!init) {
+            closeModal('timeModal');
+        }
+    }
+
+    function selectLanguage(lang) {
+        currentLanguage = lang;
+        
+        updateModalSelection('langOptionsList', lang);
+        updateBadges();
+        updateLocalizedTexts();
+        
+        closeModal('langModal');
+    }
+
+    function updateBadges() {
+        document.getElementById('timeBadge').textContent = `${currentTimeframe}m`;
+        document.getElementById('langBadge').textContent = currentLanguage.toUpperCase();
+    }
+
+    function updateLocalizedTexts() {
+        const t = translations[currentLanguage];
+        
+        document.getElementById('appTitle').textContent = t.appTitle;
+        document.getElementById('defaultText').textContent = t.defaultText;
+        document.getElementById('actionBtn').textContent = t.buttonText;
+        document.getElementById('priceLabel').textContent = t.priceLabel;
+        
+        const rsiLabel = document.getElementById('rsiLabel');
+        const rsiValue = document.getElementById('rsiValue').textContent;
+        rsiLabel.innerHTML = t.rsiLabel + ' <span id="rsiValue">' + rsiValue + '</span>';
+        
+        document.getElementById('timeModalTitle').textContent = t.timeModalTitle;
+        document.getElementById('langModalTitle').textContent = t.langModalTitle;
+        
+        document.getElementById('timerLabel').children[0].textContent = t.timerLabel;
+        document.getElementById('directionLabel').textContent = t.directionLabel;
+        document.getElementById('untilLabel').textContent = t.untilLabel;
+        document.getElementById('expiryIndicator').textContent = t.expiryWarning;
+        
+        document.querySelector('.expiry-time span:first-child').textContent = t.expiresAt;
+        document.querySelector('#untilTime').textContent = `${t.untilText} --:--`;
+        
+        const timeOptions = document.querySelectorAll('#timeModal .option-item span:first-child');
+        t.timeframeOptions.forEach((text, index) => {
+            if (timeOptions[index]) {
+                timeOptions[index].textContent = text;
+            }
+        });
+        
+        const langOptions = document.querySelectorAll('#langModal .option-item span:first-child');
+        t.languageOptions.forEach((text, index) => {
+            if (langOptions[index]) {
+                langOptions[index].textContent = text;
+            }
+        });
+        
+        document.getElementById('htmlLang').lang = currentLanguage;
+        
+        if (currentSignal) {
+            updateDirectionText();
+            if (signalEndTime) {
+                updateExpiryTimeDisplay();
+            }
+        }
+    }
+
+    function updateDirectionText() {
+        const t = translations[currentLanguage];
+        const directionText = document.getElementById('directionText');
+        
+        if (currentSignal && currentSignal.signal) {
+            const sig = currentSignal.signal.toLowerCase();
+            if (sig.includes('up') || sig.includes('buy')) {
+                directionText.textContent = t.directionUp;
+                directionText.style.color = 'var(--signal-green)';
+            } else {
+                directionText.textContent = t.directionDown;
+                directionText.style.color = 'var(--signal-red)';
+            }
+        }
+    }
+
+    // Получение текущего московского времени
+    function getMoscowTime() {
+        const now = new Date();
+        const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const moscowTime = new Date(utcTime + (3 * 3600000));
+        return moscowTime;
+    }
+
+    /**
+     * ПРОВЕРКА: нужно ли добавлять 2 дополнительные минуты?
+     * Добавляем только если:
+     * 1. Сигнал запущен в последние 20 секунд минуты (40-59 секунд)
+     * 2. И это ПЕРВЫЙ сигнал в этой минуте
+     */
+    function shouldAddExtraMinutes() {
+        const now = getMoscowTime();
+        const currentSeconds = now.getSeconds();
+        const currentMinute = now.getMinutes();
+        
+        console.log(`Проверка дополнительных минут: ${now.getHours()}:${String(currentMinute).padStart(2,'0')}:${String(currentSeconds).padStart(2,'0')}`);
+        
+        // Сбрасываем дополнительные минуты
+        minutesToAdd = 0;
+        
+        // Проверяем условие 1: последние 20 секунд минуты (40-59 секунд)
+        const isLateInMinute = currentSeconds >= 40;
+        
+        // Проверяем условие 2: это первый сигнал в этой минуте
+        const isFirstSignalInMinute = lastSignalMinute !== currentMinute;
+        
+        if (isLateInMinute && isFirstSignalInMinute) {
+            minutesToAdd = 2;
+            console.log(`✅ Добавляем 2 дополнительные минуты (запуск на ${currentSeconds} секунде, первый сигнал в минуте)`);
+        } else {
+            console.log(`⏭ Не добавляем дополнительные минуты:`);
+            if (!isLateInMinute) console.log(`   - Не последние 20 секунд (${currentSeconds} секунд)`);
+            if (!isFirstSignalInMinute) console.log(`   - Не первый сигнал в минуте (уже был сигнал в ${currentMinute} минуте)`);
+        }
+        
+        // Обновляем последнюю минуту сигнала
+        lastSignalMinute = currentMinute;
+        
+        return minutesToAdd;
+    }
+
+    // Рассчитываем время окончания сигнала (упрощенная версия)
+    function calculateSignalEndTime() {
+        const now = getMoscowTime();
+        const currentMinutes = now.getMinutes();
+        const currentSeconds = now.getSeconds();
+        
+        console.log(`Текущее время МСК: ${now.getHours()}:${String(currentMinutes).padStart(2,'0')}:${String(currentSeconds).padStart(2,'0')}`);
+        
+        // Берем текущую минуту и прибавляем таймфрейм + дополнительные минуты
+        const totalMinutesToAdd = currentTimeframe + minutesToAdd;
+        let targetMinute = currentMinutes + totalMinutesToAdd;
+        let extraHours = 0;
+        
+        // Обработка перехода через час
+        while (targetMinute >= 60) {
+            targetMinute -= 60;
+            extraHours++;
+        }
+        
+        console.log(`Добавляем ${totalMinutesToAdd} минут: ${currentMinutes} + ${totalMinutesToAdd} = ${targetMinute}${extraHours > 0 ? ` (+${extraHours}ч)` : ''}`);
+        
+        // Устанавливаем итоговое время
+        const resultTime = new Date(now);
+        resultTime.setMinutes(targetMinute);
+        resultTime.setSeconds(0);
+        resultTime.setMilliseconds(0);
+        
+        if (extraHours > 0) {
+            resultTime.setHours(resultTime.getHours() + extraHours);
+        }
+        
+        console.log(`Итоговое время окончания: ${resultTime.getHours()}:${String(resultTime.getMinutes()).padStart(2,'0')}`);
+        
+        return resultTime;
+    }
+
+    // Форматирование времени окончания
+    function updateExpiryTimeDisplay() {
+        const t = translations[currentLanguage];
+        if (signalEndTime) {
+            const expiryFormatted = formatTimeToHHMM(signalEndTime);
+            document.getElementById('expiryTime').textContent = expiryFormatted;
+            document.getElementById('untilTime').textContent = `${t.untilText} ${expiryFormatted}`;
+        }
+    }
+
+    // Обновление сигнала с новым таймфреймом
+    function updateSignalWithNewTimeframe() {
+        console.log(`Обновление таймфрейма на: ${currentTimeframe}м`);
+        
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+        
+        if (currentSignal && signalStartTime) {
+            minutesToAdd = 0;
+            signalEndTime = calculateSignalEndTime();
+            
+            console.log(`Новое время окончания: ${signalEndTime.getHours()}:${String(signalEndTime.getMinutes()).padStart(2,'0')}`);
+            startCountdownTimer();
+        }
+    }
+
+    // Запуск таймера обратного отсчета
+    function startCountdownTimer() {
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+        }
+        
+        if (!signalEndTime) {
+            signalEndTime = calculateSignalEndTime();
+            console.log(`Сигнал действует до: ${signalEndTime.getHours()}:${signalEndTime.getMinutes()}`);
+        } else {
+            console.log(`Используется сохраненное время окончания: ${signalEndTime.getHours()}:${signalEndTime.getMinutes()}`);
+        }
+        
+        document.getElementById('signalInfoContainer').style.display = 'block';
+        updateExpiryTimeDisplay();
+        
+        function updateTimer() {
+            const currentMoscowTime = getMoscowTime();
+            const remainingTime = signalEndTime.getTime() - currentMoscowTime.getTime();
+            const remainingSeconds = Math.max(0, Math.floor(remainingTime / 1000));
+            
+            const timeText = formatTime(remainingSeconds);
+            const parts = timeText.split(':');
+            document.getElementById('timeRemaining').innerHTML = `${parts[0]}<span class="timer-colon">:</span>${parts[1]}`;
+            
+            const totalDuration = (currentTimeframe + minutesToAdd) * 60;
+            const progressPercent = (remainingSeconds / totalDuration) * 100;
+            
+            document.getElementById('timerProgress').style.width = `${progressPercent}%`;
+            
+            const timeElement = document.getElementById('timeRemaining');
+            if (remainingSeconds <= 30) {
+                document.getElementById('timerProgress').style.background = 'var(--signal-red)';
+                document.getElementById('expiryIndicator').style.display = 'inline-block';
+                timeElement.style.color = 'var(--signal-red)';
+            } else if (remainingSeconds <= 60) {
+                document.getElementById('timerProgress').style.background = 'var(--signal-yellow)';
+                document.getElementById('expiryIndicator').style.display = 'none';
+                timeElement.style.color = 'var(--signal-yellow)';
+            } else {
+                let signalColor = 'var(--primary-blue)';
+                if (currentSignal && currentSignal.signal) {
+                    signalColor = currentSignal.signal.toLowerCase().includes('up') || 
+                                  currentSignal.signal.toLowerCase().includes('buy') ?
+                                  'var(--signal-green)' : 'var(--signal-red)';
+                }
+                document.getElementById('timerProgress').style.background = signalColor;
+                document.getElementById('expiryIndicator').style.display = 'none';
+                timeElement.style.color = 'var(--text-white)';
+            }
+            
+            if (remainingSeconds <= 0) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+                const t = translations[currentLanguage];
+                document.getElementById('expiryIndicator').textContent = t.expiryText;
+                document.getElementById('expiryIndicator').style.display = 'inline-block';
+                document.getElementById('expiryIndicator').style.background = 'var(--signal-red)';
+                document.getElementById('timeRemaining').innerHTML = `00<span class="timer-colon">:</span>00`;
+                document.getElementById('timeRemaining').style.color = 'var(--signal-red)';
+            }
+        }
+        
+        updateTimer();
+        countdownTimer = setInterval(updateTimer, 1000);
+    }
+
+    // Форматирование времени в MM:SS
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Форматирование времени в ЧЧ:ММ
+    function formatTimeToHHMM(date) {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+
+    /**
+     * ОСНОВНАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ СИГНАЛА
+     */
+    async function fetchSignal() {
+        const pair = document.getElementById('currencySelect').value;
+        const btn = document.getElementById('actionBtn');
+        const infoBox = document.getElementById('infoBox');
+        const defaultText = document.getElementById('defaultText');
+        const resultContent = document.getElementById('resultContent');
+        const signalInfoContainer = document.getElementById('signalInfoContainer');
+        
+        const priceEl = document.getElementById('priceValue');
+        const signalEl = document.getElementById('signalValue');
+        const rsiEl = document.getElementById('rsiValue');
+        
+        const t = translations[currentLanguage];
+
+        // Отображение интерфейса
+        btn.disabled = true;
+        btn.innerText = t.analyzing;
+        
+        infoBox.className = 'info-box'; 
+        defaultText.style.display = 'none';
+        resultContent.style.display = 'block';
+        signalInfoContainer.style.display = 'none';
+        
+        // Прячем индикатор истечения
+        document.getElementById('expiryIndicator').style.display = 'none';
+        document.getElementById('expiryIndicator').style.background = 'var(--signal-yellow)';
+        document.getElementById('expiryIndicator').textContent = t.expiryWarning;
+        
+        // Показываем направление как "Анализ..."
+        document.getElementById('directionText').textContent = t.analyzing.replace('...', '');
+        document.getElementById('directionText').style.color = 'var(--primary-blue)';
+
+        try {
+            /**
+             * ШАГ 1: Проверяем и добавляем дополнительные минуты если нужно
+             */
+            console.log('=== ПРОВЕРКА ДОПОЛНИТЕЛЬНЫХ МИНУТ ===');
+            const extraMinutes = shouldAddExtraMinutes();
+            
+            /**
+             * ШАГ 2: Рассчитываем время для нового сигнала
+             */
+            signalStartTime = getMoscowTime();
+            signalEndTime = calculateSignalEndTime();
+            
+            console.log(`🕐 Сигнал начался в: ${signalStartTime.getHours()}:${String(signalStartTime.getMinutes()).padStart(2, '0')}:${String(signalStartTime.getSeconds()).padStart(2, '0')}`);
+            console.log(`⏰ Сигнал действует до: ${signalEndTime.getHours()}:${String(signalEndTime.getMinutes()).padStart(2, '0')}`);
+            if (extraMinutes > 0) {
+                console.log(`📊 Добавлено ${extraMinutes} минут (итоговое время: ${currentTimeframe + extraMinutes}м)`);
+            } else {
+                console.log(`📊 Без дополнительных минут (${currentTimeframe}м)`);
+            }
+
+            // Сбрасываем предыдущий таймер
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+
+            // Запрашиваем сигнал у API
+            const timeframeParam = currentTimeframe;
+            const response = await fetch(`https://afforrfsoxkge.com/signals-api/signal/${timeframeParam}/${pair}`);
+            
+            if (!response.ok) throw new Error('API Error');
+            
+            const data = await response.json();
+            currentSignal = data;
+
+            // Обновляем информацию о сигнале
+            priceEl.innerText = data.price;
+            rsiEl.innerText = data.rsi;
+            
+            const sig = data.signal.toLowerCase();
+
+            // Обновляем направление
+            updateDirectionText();
+            
+            // Настраиваем стили в зависимости от сигнала
+            if (sig.includes('up') || sig.includes('buy')) {
+                signalEl.innerText = t.buySignal;
+                signalEl.className = "signal-direction bg-up signal-up";
+                priceEl.className = "price-tag signal-up";
+                infoBox.classList.add('glow-up');
+                document.getElementById('timerProgress').style.background = 'var(--signal-green)';
+            } else {
+                signalEl.innerText = t.sellSignal;
+                signalEl.className = "signal-direction bg-down signal-down";
+                priceEl.className = "price-tag signal-down";
+                infoBox.classList.add('glow-down');
+                document.getElementById('timerProgress').style.background = 'var(--signal-red)';
+            }
+
+            // Показываем таймер и запускаем его
+            signalInfoContainer.style.display = 'block';
+            updateExpiryTimeDisplay();
+            startCountdownTimer();
+
+        } catch (error) {
+            console.error('Ошибка при получении сигнала:', error);
+            
+            // В случае ошибки показываем сообщение
+            defaultText.style.display = 'block';
+            defaultText.innerText = t.errorText;
+            resultContent.style.display = 'none';
+            
+            // Сбрасываем переменные
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+            minutesToAdd = 0;
+            signalEndTime = null;
+            signalStartTime = null;
+            
+        } finally {
+            // Включаем кнопку обратно
+            btn.disabled = false;
+            btn.innerText = t.buttonText;
+        }
+    }
+</script>
+
+</body>
+</html>
