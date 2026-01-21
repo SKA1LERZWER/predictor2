@@ -153,16 +153,6 @@
             margin-bottom: 5px;
         }
 
-        .signal-direction {
-            font-size: 1.5rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            padding: 8px 20px;
-            border-radius: 8px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
         .main-btn {
             width: 100%;
             padding: 20px;
@@ -506,10 +496,11 @@
             <div class="result-content" id="resultContent">
                 <div style="font-size: 0.9rem; color: #888; margin-bottom: 5px;" id="priceLabel">PRICE</div>
                 <div class="price-tag" id="priceValue">0.0000</div>
-                <div class="signal-direction" id="signalValue">WAITING</div>
+                
+                <!-- Надпись BUY/SELL удалена отсюда -->
+                
                 <div style="margin-top: 15px; font-size: 0.8rem; opacity: 0.7;" id="rsiLabel">RSI: <span id="rsiValue">0</span></div>
                 
-                <!-- Новый блок с таймером и информацией о сигнале -->
                 <div class="signal-info-container" id="signalInfoContainer" style="display: none;">
                     <div class="timer-section">
                         <div class="timer-label" id="timerLabel">
@@ -547,7 +538,7 @@
         </button>
     </div>
 
-    <!-- Модальное окно выбора таймфрейма -->
+    <!-- Модальные окна -->
     <div class="modal-overlay" id="timeModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -575,7 +566,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно выбора языка -->
     <div class="modal-overlay" id="langModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -596,7 +586,6 @@
     </div>
 
 <script>
-    // Локализация
     const translations = {
         ru: {
             appTitle: "TRADE SIGNAL",
@@ -605,8 +594,6 @@
             analyzing: "АНАЛИЗ РЫНКА...",
             priceLabel: "ЦЕНА",
             rsiLabel: "RSI:",
-            buySignal: "BUY UP ⬆",
-            sellSignal: "SELL DOWN ⬇",
             errorText: "Ошибка соединения. Попробуйте другую пару.",
             timeModalTitle: "Выберите таймфрейм",
             langModalTitle: "Выберите язык",
@@ -629,8 +616,6 @@
             analyzing: "ANALYZING MARKET...",
             priceLabel: "PRICE",
             rsiLabel: "RSI:",
-            buySignal: "BUY UP ⬆",
-            sellSignal: "SELL DOWN ⬇",
             errorText: "Connection error. Try another pair.",
             timeModalTitle: "Select Timeframe",
             langModalTitle: "Select Language",
@@ -648,7 +633,6 @@
         }
     };
 
-    // Настройки приложения
     let currentLanguage = 'ru';
     let currentTimeframe = 3;
     let currentSignal = null;
@@ -656,16 +640,14 @@
     let signalEndTime = null;
     let signalStartTime = null;
     let minutesToAdd = 0;
-    let lastSignalMinute = null; // Последняя минута, когда был получен сигнал
+    let lastSignalMinute = null;
 
-    // Список валют
     const rawPairs = [
         "CADJPY", "CADCHF", "EURUSD", "CHFJPY", "AUDUSD", "USDJPY", "AUDJPY", 
         "GBPAUD", "GBPCAD", "AUDCHF", "EURCAD", "EURJPY", "GBPUSD", 
         "USDCHF", "EURGBP", "USDCAD", "EURCHF", "GBPCHF", "AUDCAD", "GBPJPY"
     ];
 
-    // Инициализация приложения
     document.addEventListener('DOMContentLoaded', function() {
         initializeApp();
         setupEventListeners();
@@ -673,105 +655,58 @@
     });
 
     function initializeApp() {
-        // Заполнение валютных пар
         const sortedPairs = rawPairs.sort();
         const select = document.getElementById('currencySelect');
-        
         sortedPairs.forEach(pair => {
             const option = document.createElement('option');
             option.value = pair;
-            const niceName = pair.substring(0, 3) + '/' + pair.substring(3);
-            option.text = niceName;
+            option.text = pair.substring(0, 3) + '/' + pair.substring(3);
             select.appendChild(option);
         });
-
         if (sortedPairs.includes('EURUSD')) select.value = 'EURUSD';
-        
         updateBadges();
         updateLocalizedTexts();
     }
 
     function setupEventListeners() {
-        document.getElementById('timeBtn').addEventListener('click', function() {
-            openModal('timeModal');
-        });
-
-        document.getElementById('langBtn').addEventListener('click', function() {
-            openModal('langModal');
-        });
-
+        document.getElementById('timeBtn').addEventListener('click', () => openModal('timeModal'));
+        document.getElementById('langBtn').addEventListener('click', () => openModal('langModal'));
         document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal(this.id);
-                }
-            });
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal('timeModal');
-                closeModal('langModal');
-            }
+            modal.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
         });
     }
 
-    // Функции для работы с модальными окнами
     function openModal(modalId) {
-        if (modalId === 'timeModal') {
-            updateModalSelection('timeOptionsList', currentTimeframe.toString());
-        } else if (modalId === 'langModal') {
-            updateModalSelection('langOptionsList', currentLanguage);
-        }
-        
+        if (modalId === 'timeModal') updateModalSelection('timeOptionsList', currentTimeframe.toString());
+        else if (modalId === 'langModal') updateModalSelection('langOptionsList', currentLanguage);
         document.getElementById(modalId).classList.add('active');
-        document.body.style.overflow = 'hidden';
     }
 
-    function closeModal(modalId) {
-        document.getElementById(modalId).classList.remove('active');
-        document.body.style.overflow = 'auto';
-    }
+    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
 
     function updateModalSelection(listId, selectedValue) {
-        const list = document.getElementById(listId);
-        const items = list.querySelectorAll('.option-item');
-        
+        const items = document.getElementById(listId).querySelectorAll('.option-item');
         items.forEach(item => {
             const check = item.querySelector('.option-check');
-            if (item.dataset.value === selectedValue) {
-                item.classList.add('selected');
-                if (check) check.style.display = 'inline';
-            } else {
-                item.classList.remove('selected');
-                if (check) check.style.display = 'none';
-            }
+            const isSelected = item.dataset.value === selectedValue;
+            item.classList.toggle('selected', isSelected);
+            if (check) check.style.display = isSelected ? 'inline' : 'none';
         });
     }
 
     function selectTimeframe(minutes, init = false) {
         currentTimeframe = minutes;
-        minutesToAdd = 0;
-        
         updateModalSelection('timeOptionsList', minutes.toString());
         updateBadges();
-        
-        if (currentSignal && !init) {
-            updateSignalWithNewTimeframe();
-        }
-        
-        if (!init) {
-            closeModal('timeModal');
-        }
+        if (currentSignal && !init) updateSignalWithNewTimeframe();
+        if (!init) closeModal('timeModal');
     }
 
     function selectLanguage(lang) {
         currentLanguage = lang;
-        
         updateModalSelection('langOptionsList', lang);
         updateBadges();
         updateLocalizedTexts();
-        
         closeModal('langModal');
     }
 
@@ -782,383 +717,154 @@
 
     function updateLocalizedTexts() {
         const t = translations[currentLanguage];
-        
         document.getElementById('appTitle').textContent = t.appTitle;
         document.getElementById('defaultText').textContent = t.defaultText;
         document.getElementById('actionBtn').textContent = t.buttonText;
         document.getElementById('priceLabel').textContent = t.priceLabel;
-        
-        const rsiLabel = document.getElementById('rsiLabel');
-        const rsiValue = document.getElementById('rsiValue').textContent;
-        rsiLabel.innerHTML = t.rsiLabel + ' <span id="rsiValue">' + rsiValue + '</span>';
-        
+        document.getElementById('rsiLabel').innerHTML = `${t.rsiLabel} <span id="rsiValue">${document.getElementById('rsiValue').textContent}</span>`;
         document.getElementById('timeModalTitle').textContent = t.timeModalTitle;
         document.getElementById('langModalTitle').textContent = t.langModalTitle;
-        
         document.getElementById('timerLabel').children[0].textContent = t.timerLabel;
         document.getElementById('directionLabel').textContent = t.directionLabel;
         document.getElementById('untilLabel').textContent = t.untilLabel;
         document.getElementById('expiryIndicator').textContent = t.expiryWarning;
-        
         document.querySelector('.expiry-time span:first-child').textContent = t.expiresAt;
-        document.querySelector('#untilTime').textContent = `${t.untilText} --:--`;
-        
-        const timeOptions = document.querySelectorAll('#timeModal .option-item span:first-child');
-        t.timeframeOptions.forEach((text, index) => {
-            if (timeOptions[index]) {
-                timeOptions[index].textContent = text;
-            }
-        });
-        
-        const langOptions = document.querySelectorAll('#langModal .option-item span:first-child');
-        t.languageOptions.forEach((text, index) => {
-            if (langOptions[index]) {
-                langOptions[index].textContent = text;
-            }
-        });
-        
         document.getElementById('htmlLang').lang = currentLanguage;
-        
         if (currentSignal) {
             updateDirectionText();
-            if (signalEndTime) {
-                updateExpiryTimeDisplay();
-            }
+            updateExpiryTimeDisplay();
         }
     }
 
     function updateDirectionText() {
         const t = translations[currentLanguage];
         const directionText = document.getElementById('directionText');
-        
         if (currentSignal && currentSignal.signal) {
-            const sig = currentSignal.signal.toLowerCase();
-            if (sig.includes('up') || sig.includes('buy')) {
-                directionText.textContent = t.directionUp;
-                directionText.style.color = 'var(--signal-green)';
-            } else {
-                directionText.textContent = t.directionDown;
-                directionText.style.color = 'var(--signal-red)';
-            }
+            const isUp = currentSignal.signal.toLowerCase().includes('up') || currentSignal.signal.toLowerCase().includes('buy');
+            directionText.textContent = isUp ? t.directionUp : t.directionDown;
+            directionText.style.color = isUp ? 'var(--signal-green)' : 'var(--signal-red)';
         }
     }
 
-    // Получение текущего московского времени
     function getMoscowTime() {
         const now = new Date();
-        const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const moscowTime = new Date(utcTime + (3 * 3600000));
-        return moscowTime;
+        return new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3 * 3600000));
     }
 
-    /**
-     * ПРОВЕРКА: нужно ли добавлять 2 дополнительные минуты?
-     * Добавляем только если:
-     * 1. Сигнал запущен в последние 20 секунд минуты (40-59 секунд)
-     * 2. И это ПЕРВЫЙ сигнал в этой минуте
-     * 3. И это НЕ первый запрос пользователя
-     */
     function shouldAddExtraMinutes() {
-        // Если это первый сигнал (currentSignal === null), не добавляем дополнительные минуты
-        if (currentSignal === null) {
-            console.log('Первый сигнал - дополнительные минуты не добавляем');
-            minutesToAdd = 0;
-            return 0;
-        }
-        
+        if (currentSignal === null) return 0;
         const now = getMoscowTime();
         const currentSeconds = now.getSeconds();
         const currentMinute = now.getMinutes();
-        
-        console.log(`Проверка дополнительных минут: ${now.getHours()}:${String(currentMinute).padStart(2,'0')}:${String(currentSeconds).padStart(2,'0')}`);
-        
-        // Сбрасываем дополнительные минуты
-        minutesToAdd = 0;
-        
-        // Проверяем условие 1: последние 20 секунд минуты (40-59 секунд)
-        const isLateInMinute = currentSeconds >= 40;
-        
-        // Проверяем условие 2: это первый сигнал в этой минуте
-        const isFirstSignalInMinute = lastSignalMinute !== currentMinute;
-        
-        if (isLateInMinute && isFirstSignalInMinute) {
-            minutesToAdd = 2;
-            console.log(`✅ Добавляем 2 дополнительные минуты (запуск на ${currentSeconds} секунде, первый сигнал в минуте)`);
-        } else {
-            console.log(`⏭ Не добавляем дополнительные минуты:`);
-            if (!isLateInMinute) console.log(`   - Не последние 20 секунд (${currentSeconds} секунд)`);
-            if (!isFirstSignalInMinute) console.log(`   - Не первый сигнал в минуте (уже был сигнал в ${currentMinute} минуте)`);
-        }
-        
-        // Обновляем последнюю минуту сигнала
+        minutesToAdd = (currentSeconds >= 40 && lastSignalMinute !== currentMinute) ? 2 : 0;
         lastSignalMinute = currentMinute;
-        
         return minutesToAdd;
     }
 
-    // Рассчитываем время окончания сигнала
     function calculateSignalEndTime() {
         const now = getMoscowTime();
-        const currentMinutes = now.getMinutes();
-        const currentSeconds = now.getSeconds();
-        
-        console.log(`Текущее время МСК: ${now.getHours()}:${String(currentMinutes).padStart(2,'0')}:${String(currentSeconds).padStart(2,'0')}`);
-        console.log(`Добавляемые минуты: ${currentTimeframe} (таймфрейм) + ${minutesToAdd} (дополнительные) = ${currentTimeframe + minutesToAdd}`);
-        
-        // Берем текущую минуту и прибавляем таймфрейм + дополнительные минуты
-        const totalMinutesToAdd = currentTimeframe + minutesToAdd;
         const resultTime = new Date(now);
-        
-        // Добавляем минуты
-        resultTime.setMinutes(resultTime.getMinutes() + totalMinutesToAdd);
+        resultTime.setMinutes(resultTime.getMinutes() + currentTimeframe + minutesToAdd);
         resultTime.setSeconds(0);
         resultTime.setMilliseconds(0);
-        
-        console.log(`Итоговое время окончания: ${resultTime.getHours()}:${String(resultTime.getMinutes()).padStart(2,'0')}`);
-        
         return resultTime;
     }
 
-    // Форматирование времени окончания
     function updateExpiryTimeDisplay() {
         const t = translations[currentLanguage];
         if (signalEndTime) {
-            const expiryFormatted = formatTimeToHHMM(signalEndTime);
-            document.getElementById('expiryTime').textContent = expiryFormatted;
-            document.getElementById('untilTime').textContent = `${t.untilText} ${expiryFormatted}`;
+            const h = signalEndTime.getHours().toString().padStart(2, '0');
+            const m = signalEndTime.getMinutes().toString().padStart(2, '0');
+            const formatted = `${h}:${m}`;
+            document.getElementById('expiryTime').textContent = formatted;
+            document.getElementById('untilTime').textContent = `${t.untilText} ${formatted}`;
         }
     }
 
-    // Обновление сигнала с новым таймфреймом
     function updateSignalWithNewTimeframe() {
-        console.log(`Обновление таймфрейма на: ${currentTimeframe}м`);
-        
-        if (countdownTimer) {
-            clearInterval(countdownTimer);
-            countdownTimer = null;
-        }
-        
+        if (countdownTimer) clearInterval(countdownTimer);
         if (currentSignal && signalStartTime) {
             minutesToAdd = 0;
             signalEndTime = calculateSignalEndTime();
-            
-            console.log(`Новое время окончания: ${signalEndTime.getHours()}:${String(signalEndTime.getMinutes()).padStart(2,'0')}`);
             startCountdownTimer();
         }
     }
 
-    // Запуск таймера обратного отсчета
     function startCountdownTimer() {
-        if (countdownTimer) {
-            clearInterval(countdownTimer);
-        }
-        
-        if (!signalEndTime) {
-            signalEndTime = calculateSignalEndTime();
-            console.log(`Сигнал действует до: ${signalEndTime.getHours()}:${signalEndTime.getMinutes()}`);
-        } else {
-            console.log(`Используется сохраненное время окончания: ${signalEndTime.getHours()}:${signalEndTime.getMinutes()}`);
-        }
-        
+        if (countdownTimer) clearInterval(countdownTimer);
+        if (!signalEndTime) signalEndTime = calculateSignalEndTime();
         document.getElementById('signalInfoContainer').style.display = 'block';
         updateExpiryTimeDisplay();
         
-        function updateTimer() {
-            const currentMoscowTime = getMoscowTime();
-            const remainingTime = signalEndTime.getTime() - currentMoscowTime.getTime();
-            const remainingSeconds = Math.max(0, Math.floor(remainingTime / 1000));
+        const updateTimer = () => {
+            const remaining = Math.max(0, Math.floor((signalEndTime.getTime() - getMoscowTime().getTime()) / 1000));
+            const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+            const secs = (remaining % 60).toString().padStart(2, '0');
+            document.getElementById('timeRemaining').innerHTML = `${mins}<span class="timer-colon">:</span>${secs}`;
             
-            const timeText = formatTime(remainingSeconds);
-            const parts = timeText.split(':');
-            document.getElementById('timeRemaining').innerHTML = `${parts[0]}<span class="timer-colon">:</span>${parts[1]}`;
+            const progress = (remaining / ((currentTimeframe + minutesToAdd) * 60)) * 100;
+            const progressEl = document.getElementById('timerProgress');
+            progressEl.style.width = `${progress}%`;
             
-            const totalDuration = (currentTimeframe + minutesToAdd) * 60;
-            const progressPercent = (remainingSeconds / totalDuration) * 100;
-            
-            document.getElementById('timerProgress').style.width = `${progressPercent}%`;
-            
-            const timeElement = document.getElementById('timeRemaining');
-            if (remainingSeconds <= 30) {
-                document.getElementById('timerProgress').style.background = 'var(--signal-red)';
+            const timeEl = document.getElementById('timeRemaining');
+            if (remaining <= 30) {
+                progressEl.style.background = 'var(--signal-red)';
                 document.getElementById('expiryIndicator').style.display = 'inline-block';
-                timeElement.style.color = 'var(--signal-red)';
-            } else if (remainingSeconds <= 60) {
-                document.getElementById('timerProgress').style.background = 'var(--signal-yellow)';
-                document.getElementById('expiryIndicator').style.display = 'none';
-                timeElement.style.color = 'var(--signal-yellow)';
+                timeEl.style.color = 'var(--signal-red)';
             } else {
-                let signalColor = 'var(--primary-blue)';
-                if (currentSignal && currentSignal.signal) {
-                    signalColor = currentSignal.signal.toLowerCase().includes('up') || 
-                                  currentSignal.signal.toLowerCase().includes('buy') ?
-                                  'var(--signal-green)' : 'var(--signal-red)';
-                }
-                document.getElementById('timerProgress').style.background = signalColor;
+                const isUp = currentSignal.signal.toLowerCase().includes('up') || currentSignal.signal.toLowerCase().includes('buy');
+                progressEl.style.background = isUp ? 'var(--signal-green)' : 'var(--signal-red)';
                 document.getElementById('expiryIndicator').style.display = 'none';
-                timeElement.style.color = 'var(--text-white)';
+                timeEl.style.color = 'white';
             }
-            
-            if (remainingSeconds <= 0) {
-                clearInterval(countdownTimer);
-                countdownTimer = null;
-                const t = translations[currentLanguage];
-                document.getElementById('expiryIndicator').textContent = t.expiryText;
-                document.getElementById('expiryIndicator').style.display = 'inline-block';
-                document.getElementById('expiryIndicator').style.background = 'var(--signal-red)';
-                document.getElementById('timeRemaining').innerHTML = `00<span class="timer-colon">:</span>00`;
-                document.getElementById('timeRemaining').style.color = 'var(--signal-red)';
-            }
-        }
-        
+            if (remaining <= 0) clearInterval(countdownTimer);
+        };
         updateTimer();
         countdownTimer = setInterval(updateTimer, 1000);
     }
 
-    // Форматирование времени в MM:SS
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    // Форматирование времени в ЧЧ:ММ
-    function formatTimeToHHMM(date) {
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
-    }
-
-    /**
-     * ОСНОВНАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ СИГНАЛА
-     */
     async function fetchSignal() {
         const pair = document.getElementById('currencySelect').value;
         const btn = document.getElementById('actionBtn');
         const infoBox = document.getElementById('infoBox');
-        const defaultText = document.getElementById('defaultText');
-        const resultContent = document.getElementById('resultContent');
-        const signalInfoContainer = document.getElementById('signalInfoContainer');
-        
-        const priceEl = document.getElementById('priceValue');
-        const signalEl = document.getElementById('signalValue');
-        const rsiEl = document.getElementById('rsiValue');
-        
         const t = translations[currentLanguage];
 
-        // Отображение интерфейса
         btn.disabled = true;
         btn.innerText = t.analyzing;
-        
         infoBox.className = 'info-box'; 
-        defaultText.style.display = 'none';
-        resultContent.style.display = 'block';
-        signalInfoContainer.style.display = 'none';
-        
-        // Прячем индикатор истечения
-        document.getElementById('expiryIndicator').style.display = 'none';
-        document.getElementById('expiryIndicator').style.background = 'var(--signal-yellow)';
-        document.getElementById('expiryIndicator').textContent = t.expiryWarning;
-        
-        // Показываем направление как "Анализ..."
-        document.getElementById('directionText').textContent = t.analyzing.replace('...', '');
-        document.getElementById('directionText').style.color = 'var(--primary-blue)';
+        document.getElementById('defaultText').style.display = 'none';
+        document.getElementById('resultContent').style.display = 'block';
+        document.getElementById('signalInfoContainer').style.display = 'none';
 
         try {
-            /**
-             * ШАГ 1: Проверяем и добавляем дополнительные минуты если нужно
-             */
-            console.log('=== ПРОВЕРКА ДОПОЛНИТЕЛЬНЫХ МИНУТ ===');
-            
-            // Сначала сбрасываем дополнительные минуты
-            minutesToAdd = 0;
-            
-            // Добавляем дополнительные минуты ТОЛЬКО если это НЕ первый запрос пользователя
-            if (currentSignal !== null) { // Проверяем, был ли уже получен сигнал
-                const extraMinutes = shouldAddExtraMinutes();
-                console.log(`minutesToAdd после проверки: ${minutesToAdd}`);
-            } else {
-                console.log('Первый запрос - дополнительные минуты не добавляем');
-            }
-            
-            /**
-             * ШАГ 2: Рассчитываем время для нового сигнала
-             */
+            if (currentSignal !== null) shouldAddExtraMinutes();
             signalStartTime = getMoscowTime();
             signalEndTime = calculateSignalEndTime();
-            
-            console.log(`🕐 Сигнал начался в: ${signalStartTime.getHours()}:${String(signalStartTime.getMinutes()).padStart(2, '0')}:${String(signalStartTime.getSeconds()).padStart(2, '0')}`);
-            console.log(`⏰ Сигнал действует до: ${signalEndTime.getHours()}:${String(signalEndTime.getMinutes()).padStart(2, '0')}`);
-            console.log(`📊 Дополнительные минуты: ${minutesToAdd}`);
-            console.log(`📊 Общая продолжительность: ${currentTimeframe + minutesToAdd}м`);
 
-            // Сбрасываем предыдущий таймер
-            if (countdownTimer) {
-                clearInterval(countdownTimer);
-                countdownTimer = null;
-            }
-
-            // Запрашиваем сигнал у API
-            const timeframeParam = currentTimeframe;
-            const response = await fetch(`https://afforrfsoxkge.com/signals-api/signal/${timeframeParam}/${pair}`);
-            
+            const response = await fetch(`https://afforrfsoxkge.com/signals-api/signal/${currentTimeframe}/${pair}`);
             if (!response.ok) throw new Error('API Error');
             
             const data = await response.json();
-            currentSignal = data; // Сохраняем текущий сигнал
+            currentSignal = data;
 
-            // Обновляем информацию о сигнале
-            priceEl.innerText = data.price;
-            rsiEl.innerText = data.rsi;
+            document.getElementById('priceValue').innerText = data.price;
+            document.getElementById('rsiValue').innerText = data.rsi;
             
-            const sig = data.signal.toLowerCase();
-
-            // Обновляем направление
+            const isUp = data.signal.toLowerCase().includes('up') || data.signal.toLowerCase().includes('buy');
+            document.getElementById('priceValue').className = `price-tag ${isUp ? 'signal-up' : 'signal-down'}`;
+            infoBox.classList.add(isUp ? 'glow-up' : 'glow-down');
+            
             updateDirectionText();
-            
-            // Настраиваем стили в зависимости от сигнала
-            if (sig.includes('up') || sig.includes('buy')) {
-                signalEl.innerText = t.buySignal;
-                signalEl.className = "signal-direction bg-up signal-up";
-                priceEl.className = "price-tag signal-up";
-                infoBox.classList.add('glow-up');
-                document.getElementById('timerProgress').style.background = 'var(--signal-green)';
-            } else {
-                signalEl.innerText = t.sellSignal;
-                signalEl.className = "signal-direction bg-down signal-down";
-                priceEl.className = "price-tag signal-down";
-                infoBox.classList.add('glow-down');
-                document.getElementById('timerProgress').style.background = 'var(--signal-red)';
-            }
-
-            // Показываем таймер и запускаем его
-            signalInfoContainer.style.display = 'block';
-            updateExpiryTimeDisplay();
             startCountdownTimer();
-
         } catch (error) {
-            console.error('Ошибка при получении сигнала:', error);
-            
-            // В случае ошибки показываем сообщение
-            defaultText.style.display = 'block';
-            defaultText.innerText = t.errorText;
-            resultContent.style.display = 'none';
-            
-            // Сбрасываем переменные
-            if (countdownTimer) {
-                clearInterval(countdownTimer);
-                countdownTimer = null;
-            }
-            minutesToAdd = 0;
-            signalEndTime = null;
-            signalStartTime = null;
-            
+            document.getElementById('defaultText').style.display = 'block';
+            document.getElementById('defaultText').innerText = t.errorText;
+            document.getElementById('resultContent').style.display = 'none';
         } finally {
-            // Включаем кнопку обратно
             btn.disabled = false;
             btn.innerText = t.buttonText;
         }
     }
 </script>
-
 </body>
 </html>
